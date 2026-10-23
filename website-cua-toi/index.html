@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trọng Hiếu Phim - Rạp Phim Trực Tuyến Sống Động</title>
+
+  <!-- Google Fonts & Tailwind CSS -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              red: '#FF2A54',
+              gold: '#FFB800',
+              cyan: '#00F2FE',
+              purple: '#7928CA',
+              darkBg: '#0B0F19',
+              darkCard: '#131B2E',
+              darkNav: '#0F172A',
+            }
+          },
+          animation: {
+            'pulse-glow': 'pulseGlow 2s infinite alternate',
+            'shimmer': 'shimmer 2.5s infinite linear',
+            'float': 'float 4s ease-in-out infinite',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%': { boxShadow: '0 0 15px rgba(255, 42, 84, 0.4), 0 0 30px rgba(121, 40, 202, 0.2)' },
+              '100%': { boxShadow: '0 0 25px rgba(255, 42, 84, 0.8), 0 0 50px rgba(121, 40, 202, 0.5)' }
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-6px)' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* HIỆU ỨNG ĐOM ĐÓM: các chấm sáng nhỏ bay lơ lửng trên toàn trang.
+       Lớp đom đóm nằm trên nền nhưng không chặn thao tác nhấp chuột (pointer-events: none). */
+    #firefly-layer {
+      position: fixed;
+      inset: 10;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 40; /* Nằm trên nội dung, dưới menu/modal có z-index cao hơn */
+    }
+
+    .firefly {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      width: var(--size);
+      height: var(--size);
+      border-radius: 50%;
+      background: #fff7a8; /* Màu vàng nhạt của đom đóm */
+      box-shadow: 0 0 5px 2px rgba(255, 240, 130, .75),
+                  0 0 12px 4px rgba(255, 190, 70, .35);
+      opacity: .15;
+      animation: firefly-drift var(--duration) ease-in-out var(--delay) infinite alternate;
+    }
+
+    /* Chuyển động lên/xuống và nhấp nháy; mỗi đom đóm có thời gian khác nhau */
+    @keyframes firefly-drift {
+      0%   { transform: translate3d(0, 0, 0) scale(.65); opacity: .12; }
+      35%  { opacity: .85; }
+      100% { transform: translate3d(var(--move-x), var(--move-y), 0) scale(1.15); opacity: .35; }
+    }
+
+    /* Tôn trọng cài đặt giảm chuyển động của người dùng */
+    @media (prefers-reduced-motion: reduce) {
+      .firefly { animation: none; opacity: .45; }
+    }
+    /* CSS Variables & Glow Elements */
+    :root {
+      --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --text-main: #0f172a;
+      --border-color: rgba(226, 232, 240, 0.8);
+      --shadow-color: rgba(0, 0, 0, 0.08);
+    }
+
+    .dark {
+      --bg-gradient: linear-gradient(135deg, #090d16 0%, #0d1322 50%, #111827 100%);
+      --card-bg: rgba(19, 27, 46, 0.75);
+      --text-main: #f8fafc;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --shadow-color: rgba(0, 0, 0, 0.5);
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    /* Glassmorphism Classes */
+    .glass-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      box-shadow: 0 8px 32px 0 var(--shadow-color);
+    }
+
+    .glass-nav {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+
+    /* Custom Neon Gradients */
+    .text-gradient-primary {
+      background: linear-gradient(135deg, #FF2A54 0%, #FF7A00 50%, #FFB800 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .text-gradient-cyan {
+      background: linear-gradient(135deg, #00F2FE 0%, #4FACFE 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .badge-gradient-hot {
+      background: linear-gradient(135deg, #FF2A54 0%, #FF7A00 100%);
+    }
+
+    .badge-gradient-vip {
+      background: linear-gradient(135deg, #7928CA 0%, #FF0080 100%);
+    }
+
+    .badge-gradient-hd {
+      background: linear-gradient(135deg, #00F2FE 0%, #0066FF 100%);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #FF2A54, #7928CA);
+      border-radius: 4px;
+    }
+
+    /* Poster Card Hover Effects */
+    .movie-card {
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    .movie-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 20px 35px -10px rgba(255, 42, 84, 0.35), 0 0 20px 2px rgba(121, 40, 202, 0.3);
+    }
+
+    .movie-card:hover .poster-overlay {
+      opacity: 1;
+    }
+
+    .movie-card:hover .poster-img {
+      transform: scale(1.1);
+    }
+
+    .poster-img {
+      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    /* Animated Border Glow */
+    .neon-border {
+      position: relative;
+    }
+    .neon-border::before {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      background: linear-gradient(45deg, #FF2A54, #7928CA, #00F2FE, #FFB800);
+      border-radius: 1rem;
+      z-index: -1;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .neon-border:hover::before {
+      opacity: 1;
+    }
+
+    /* Checkbox styling */
+    .custom-checkbox:checked + label {
+      background: linear-gradient(135deg, #FF2A54, #7928CA);
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 4px 12px rgba(255, 42, 84, 0.4);
+    }
+  </style>
+</head>
+<body class="dark font-sans antialiased selection:bg-brand-red selection:text-white">
+
+  <!-- LỚP HIỆU ỨNG ĐOM ĐÓM: JavaScript sẽ tự tạo các chấm sáng trong phần tử này -->
+  <div id="firefly-layer" aria-hidden="true"></div>
+
+  <!-- TOP HEADER / NAVBAR: thanh đầu trang, logo, ô tìm kiếm và nút đổi giao diện -->
+  <header class="sticky top-0 z-40 w-full glass-nav bg-white/70 dark:bg-brand-darkNav/80 border-b border-gray-200 dark:border-white/10 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-20 gap-4">
+        
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-3 group">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-brand-red via-brand-purple to-brand-cyan flex items-center justify-center text-white shadow-lg shadow-brand-red/30 group-hover:rotate-12 transition-transform duration-300">
+            <i class="fa-solid font-bold fa-play text-xl ml-0.5"></i>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-2xl font-extrabold tracking-wider text-gradient-primary">TRỌNG<span class="text-gradient-cyan">HIẾU</span></span>
+            <span class="text-[10px] tracking-widest text-gray-500 dark:text-gray-400 uppercase font-semibold -mt-1">J97 Đại Ca</span>
+          </div>
+        </a>
+
+        <!-- Search Bar (Debounced) -->
+        <div class="flex-1 max-w-xl mx-4 relative hidden sm:block">
+          <div class="relative group">
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="Nhập tên phim, diễn viên, đạo diễn muốn tìm..." 
+              class="w-full py-3 pl-12 pr-10 text-sm bg-gray-100 dark:bg-slate-800/80 text-gray-900 dark:text-white rounded-2xl border border-gray-300 dark:border-white/10 focus:outline-none focus:border-brand-red dark:focus:border-brand-red focus:ring-2 focus:ring-brand-red/30 transition-all placeholder-gray-400"
+            >
+            <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-brand-red transition-colors"></i>
+            <button id="clearSearchBtn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white p-1">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Controls: Theme Toggle & Quick Actions -->
+        <div class="flex items-center gap-3">
+          <!-- Quick Filter Status / Total Badge -->
+          <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-brand-red/10 border border-brand-red/20 text-brand-red text-xs font-semibold">
+            <span class="w-2 h-2 rounded-full bg-brand-red animate-ping"></span>
+            <span id="movieCountBadge">Đang tải...</span>
+          </div>
+
+          <!-- Light / Dark Mode Toggle -->
+          <button 
+            id="themeToggleBtn" 
+            class="relative p-3 rounded-2xl bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-yellow-400 hover:bg-gray-200 dark:hover:bg-slate-700 transition-all border border-gray-200 dark:border-white/10 shadow-sm"
+            title="Chuyển đổi giao diện Sáng / Tối"
+          >
+            <i class="fa-solid fa-moon text-lg dark:hidden"></i>
+            <i class="fa-solid fa-sun text-lg hidden dark:block"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Mobile Search Bar -->
+      <div class="pb-4 sm:hidden">
+        <div class="relative">
+          <input 
+            type="text" 
+            id="searchInputMobile" 
+            placeholder="Tìm kiếm phim..." 
+            class="w-full py-2.5 pl-10 pr-4 text-sm bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-white rounded-xl border border-gray-300 dark:border-white/10 focus:outline-none focus:border-brand-red"
+          >
+          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- BANNER PHIM NỔI BẬT: ảnh nền, tên phim, mô tả, điểm số và nút xem ngay -->
+  <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
+    <div class="relative rounded-3xl overflow-hidden glass-panel border border-white/10 shadow-2xl">
+      <!-- Background Backdrop with Blur Overlay -->
+      <div class="absolute inset-0 z-0">
+        <img id="heroBackdrop" src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=1600&auto=format&fit=crop" class="w-full h-full object-cover filter blur-sm scale-105 opacity-40 dark:opacity-30 transition-all duration-700" alt="Featured Movie Backdrop">
+        <div class="absolute inset-0 bg-gradient-to-t from-brand-darkBg via-brand-darkBg/60 to-transparent"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-brand-darkBg via-brand-darkBg/80 to-transparent"></div>
+      </div>
+
+      <!-- Content Grid -->
+      <div class="relative z-10 p-6 sm:p-10 lg:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="max-w-2xl space-y-4 text-center md:text-left">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full badge-gradient-hot text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-brand-red/30">
+            <i class="fa-solid fa-fire text-amber-300"></i> Phim Đề Cử Hotline VIP
+          </div>
+          <h1 id="heroTitle" class="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpIgAQCQ7Dm0PYyIa-mSeiPUXYxp8D-VBWxr3CVJZEZw&s=10">
+            Avengers: End game
+          </h1>
+          <p id="heroDesc" class="text-sm sm:text-base text-gray-300 line-clamp-3 font-normal leading-relaxed">
+            Sau những sự kiện tàn khốc của Avengers: Infinity War, vũ trụ bị hủy hoại. Với sự trợ giúp của các đồng minh còn lại, Avengers tập hợp một lần nữa nhằm đảo ngược hành động của Thanos và khôi phục sự cân bằng cho vũ trụ.
+          </p>
+          <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
+            <button id="heroPlayBtn" class="px-6 py-3.5 rounded-2xl badge-gradient-hot hover:opacity-90 text-white font-bold text-sm flex items-center gap-3 shadow-xl shadow-brand-red/40 transition-all transform hover:scale-105">
+              <i class="fa-solid fa-play text-base"></i> XEM NGAY HD
+            </button>
+            <div class="flex items-center gap-3 text-xs text-gray-300 font-medium">
+              <span class="px-2.5 py-1 rounded-md bg-white/10 backdrop-blur-md border border-white/20"><i class="fa-solid fa-star text-amber-400 mr-1"></i> <span id="heroRating">8.4</span>/10</span>
+              <span class="px-2.5 py-1 rounded-md bg-white/10 backdrop-blur-md border border-white/20" id="heroYear">2019</span>
+              <span class="px-2.5 py-1 rounded-md bg-brand-cyan/20 text-brand-cyan border border-brand-cyan/30">Vietsub + Thuyết Minh</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Poster Thumbnail -->
+        <div class="relative group hidden sm:block shrink-0">
+          <div class="absolute -inset-1 bg-gradient-to-r from-brand-red to-brand-purple rounded-2xl blur opacity-75 group-hover:opacity-100 transition duration-1000 group-hover:duration-200"></div>
+          <img id="heroPoster" src="https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=600&auto=format&fit=crop" class="relative w-48 sm:w-56 h-72 sm:h-80 object-cover rounded-2xl shadow-2xl border border-white/10" alt="Hero Poster">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- NỘI DUNG CHÍNH: bộ lọc thể loại, danh sách áp phích phim và bảng phim thịnh hành -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      <!-- SIDEBAR FILTER (BÀI 1 & BÀI 2) -->
+      <aside class="lg:col-span-1 space-y-6">
+        <div class="glass-panel rounded-3xl p-6 border border-gray-200 dark:border-white/10 sticky top-28">
+          
+          <div class="flex items-center justify-between mb-6 pb-4 border-b border-gray-200 dark:border-white/10">
+            <h2 class="text-lg font-bold flex items-center gap-2">
+              <i class="fa-solid fa-filter text-brand-red"></i> Lọc Theo Thể Loại
+            </h2>
+            <button id="resetFiltersBtn" class="text-xs text-gray-400 hover:text-brand-red transition-colors flex items-center gap-1">
+              <i class="fa-solid fa-rotate-left"></i> Đặt lại
+            </button>
+          </div>
+
+          <!-- Dynamic Checkbox Container -->
+          <div class="space-y-2 max-h-[380px] overflow-y-auto pr-2" id="genreCheckboxContainer">
+            <!-- Skeleton Loader for Checkboxes -->
+            <div class="animate-pulse space-y-3">
+              <div class="h-9 bg-slate-700/30 rounded-xl"></div>
+              <div class="h-9 bg-slate-700/30 rounded-xl"></div>
+              <div class="h-9 bg-slate-700/30 rounded-xl"></div>
+            </div>
+          </div>
+
+          <!-- Quick Sort Dropdown -->
+          <div class="mt-6 pt-4 border-t border-gray-200 dark:border-white/10">
+            <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Sắp xếp theo</label>
+            <select id="sortBySelect" class="w-full py-2.5 px-3 text-xs bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-200 rounded-xl border border-gray-300 dark:border-white/10 focus:outline-none focus:border-brand-red">
+              <option value="default">Mặc định (Mới cập nhật)</option>
+              <option value="rating-desc">Đánh giá cao nhất ⭐</option>
+              <option value="year-desc">Năm phát hành (Mới nhất)</option>
+              <option value="title-asc">Tên phim (A-Z)</option>
+            </select>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- MAIN CONTENT AREA -->
+      <section class="lg:col-span-3 space-y-8">
+        
+        <!-- Section Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white/40 dark:bg-slate-800/30 p-4 rounded-2xl border border-gray-200 dark:border-white/5">
+          <div>
+            <h3 class="text-xl font-extrabold flex items-center gap-2">
+              <span class="w-3 h-3 rounded-full bg-brand-red inline-block"></span>
+              Danh Sách Phim Chiếu Rạp & Bộ VIP
+            </h3>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1" id="filterStatusText">Đang hiển thị tất cả các phim</p>
+          </div>
+
+          <div class="flex items-center gap-2 text-xs text-gray-400">
+            <span>Chế độ xem:</span>
+            <button id="viewGridBtn" class="p-2 rounded-lg bg-brand-red text-white shadow"><i class="fa-solid fa-grip"></i></button>
+          </div>
+        </div>
+
+        <!-- Movie Grid (Render dynamically via JS) -->
+        <div id="movieGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-5 min-h-[400px]">
+          <!-- Movies inserted here -->
+        </div>
+
+        <!-- Empty State Message -->
+        <div id="noResultsState" class="hidden flex-col items-center justify-center py-16 px-4 text-center glass-panel rounded-3xl border border-dashed border-gray-400 dark:border-white/20">
+          <div class="w-20 h-20 rounded-full bg-brand-red/10 flex items-center justify-center text-brand-red mb-4 text-3xl animate-bounce">
+            <i class="fa-solid fa-film"></i>
+          </div>
+          <h4 class="text-lg font-bold text-gray-800 dark:text-gray-200">Không tìm thấy phim phù hợp!</h4>
+          <p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm mt-1">Hãy thử tìm kiếm với từ khóa khác hoặc bỏ các bộ lọc thể loại để khám phá nhiều phim hơn.</p>
+          <button id="clearAllFiltersBtn" class="mt-4 px-5 py-2.5 rounded-xl badge-gradient-hot text-white font-semibold text-xs shadow-lg hover:opacity-90">
+            Xóa Tất Cả Bộ Lọc
+          </button>
+        </div>
+
+        <!-- TOP TRENDING SIDEBAR BANNER (Motchill Style Ranking) -->
+        <div class="glass-panel rounded-3xl p-6 border border-gray-200 dark:border-white/10">
+          <h3 class="text-base font-bold flex items-center gap-2 text-gradient-primary mb-4">
+            <i class="fa-solid fa-trophy text-amber-400"></i> TOP 5 PHIM HOT TRONG TUẦN
+          </h3>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="topTrendingList">
+            <!-- Render Top Trending Items -->
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </main>
+
+  <!-- CỬA SỔ CHI TIẾT PHIM: mở ra khi nhấp vào một thẻ phim -->
+  <div id="movieModal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 overflow-y-auto">
+    <!-- Backdrop Blur -->
+    <div id="modalBackdrop" class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity"></div>
+
+    <!-- Modal Card Content -->
+    <div class="relative w-full max-w-4xl glass-panel bg-slate-900 text-white rounded-3xl overflow-hidden shadow-2xl border border-white/20 z-10 transform transition-all my-8 max-h-[90vh] flex flex-col">
+      
+      <!-- Modal Header Bar / Close Button -->
+      <button id="closeModalBtn" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/60 hover:bg-brand-red text-white flex items-center justify-center border border-white/20 transition-all transform hover:rotate-90">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
+
+      <!-- Scrollable Container inside Modal -->
+      <div class="overflow-y-auto p-6 sm:p-8 space-y-6">
+        
+        <!-- Top Video / Backdrop Banner Fake Player -->
+        <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video max-h-[360px] border border-white/10 group">
+          <img id="modalBackdropImg" src="" class="w-full h-full object-cover opacity-60" alt="Trailer Banner">
+          
+          <!-- Play Overlay Effect -->
+          <div class="absolute inset-0 flex flex-col items-center justify-center bg-black/40 group-hover:bg-black/20 transition-all">
+            <button id="modalPlayTrailerBtn" class="w-16 h-16 rounded-full badge-gradient-hot flex items-center justify-center text-white text-2xl shadow-2xl shadow-brand-red/60 animate-pulse-glow transform group-hover:scale-110 transition-transform">
+              <i class="fa-solid fa-play ml-1"></i>
+            </button>
+            <span class="mt-3 text-xs font-bold tracking-widest text-white/80 uppercase">Xem Trailer / Full HD</span>
+          </div>
+
+          <div class="absolute bottom-3 left-3 flex gap-2">
+            <span class="px-2.5 py-1 rounded bg-brand-red text-[11px] font-bold">FULL HD</span>
+            <span class="px-2.5 py-1 rounded bg-black/60 backdrop-blur text-[11px] font-bold">Vietsub + Thuyết Minh</span>
+          </div>
+        </div>
+
+        <!-- Movie Info Details -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          <!-- Left Poster -->
+          <div class="shrink-0 hidden md:block">
+            <img id="modalPoster" src="" class="w-full h-72 object-cover rounded-2xl shadow-xl border border-white/10" alt="Poster">
+          </div>
+
+          <!-- Right Information -->
+          <div class="md:col-span-2 space-y-4">
+            <div>
+              <h2 id="modalTitle" class="text-2xl sm:text-3xl font-extrabold text-gradient-primary">Movie Title</h2>
+              <p id="modalOriginalTitle" class="text-xs text-gray-400 italic">Original Title</p>
+            </div>
+
+            <!-- Tags -->
+            <div class="flex flex-wrap items-center gap-2" id="modalGenres">
+              <!-- Dynamic Genre Badges -->
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="flex items-center gap-4 text-xs py-2 px-3 rounded-xl bg-white/5 border border-white/10">
+              <div><span class="text-gray-400">Đánh giá:</span> <strong id="modalRating" class="text-amber-400 font-bold">8.5/10</strong></div>
+              <div class="h-3 w-px bg-white/20"></div>
+              <div><span class="text-gray-400">Năm:</span> <span id="modalYear" class="font-semibold">2023</span></div>
+              <div class="h-3 w-px bg-white/20"></div>
+              <div><span class="text-gray-400">Thời lượng:</span> <span id="modalDuration" class="font-semibold">120 phút</span></div>
+            </div>
+
+            <!-- Description -->
+            <div>
+              <h4 class="text-xs uppercase tracking-wider text-gray-400 font-bold mb-1">Nội dung phim:</h4>
+              <p id="modalDescription" class="text-sm text-gray-300 leading-relaxed font-normal max-h-32 overflow-y-auto pr-1">
+                Mô tả chi tiết phim sẽ hiển thị ở đây...
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- PHIM LIÊN QUAN: hiển thị các phim có chung ít nhất một thể loại -->
+        <div class="pt-6 border-t border-white/10">
+          <h3 class="text-base font-bold flex items-center gap-2 mb-4">
+            <i class="fa-solid fa-compact-disc text-brand-cyan"></i> Phim Cùng Thể Loại Gợi Ý
+          </h3>
+          <div id="modalRelatedGrid" class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- Related movies injected here -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT APP LOGIC (Full bài 1, 2, 3) -->
+  <script>
+    /* ==========================================================================
+       1. DATA SOURCE - Danh sách dữ liệu Phim phong phú (moviesData)
+       ========================================================================== */
+    const moviesData = [
+        
+      {
+        id: 1,
+        title: "Avengers: Endgame",
+        originalTitle: "Avengers: Endgame (2019)",
+        genres: ["Hành động", "Viễn tưởng", "Phiêu lưu"],
+        rating: 8.4,
+        year: 2019,
+        duration: "181 phút",
+        poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpIgAQCQ7Dm0PYyIa-mSeiPUXYxp8D-VBWxr3CVJZEZw&s=10",
+        backdrop: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpIgAQCQ7Dm0PYyIa-mSeiPUXYxp8D-VBWxr3CVJZEZw&s=10",
+        description: "Sau những sự kiện tàn khốc của Avengers: Infinity War, vũ trụ bị hủy hoại. Với sự trợ giúp của các đồng minh còn lại, Avengers tập hợp một lần nữa nhằm đảo ngược hành động của Thanos và khôi phục sự cân bằng cho vũ trụ.",
+        isHot: true,
+        views: 1250000
+      },
+      {
+        id: 2,
+        title: "Mai",
+        originalTitle: "'Mai' Trấn Thành (2024)",
+        genres: ["Tình Cảm", "Tâm lý", "Chính kịch"],
+        rating: 8.7,
+        year: 2014,
+        duration: "131 phút",
+        poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXhz41iuVEnJ4QIBwtZ9_Y4sXCQxzt7afRjy8idECsyQ&s",
+        backdrop: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSXhz41iuVEnJ4QIBwtZ9_Y4sXCQxzt7afRjy8idECsyQ&s",
+        description: "MAI xoay quanh câu chuyện về cuộc đời của một người phụ nữ cùng tên với bộ phim. Trên First-look Poster, Phương Anh Đào tạo ấn tượng mạnh với cái nhìn tĩnh lặng, xuyên thấu, đặc biệt, trên bờ môi nữ diễn viên là hình ảnh cô đang nằm nghiêng trên mặt nước. Được phủ một màn sương mờ ảo, poster đậm chất nghệ thuật của Mai gây tò mò với lời tựa: “Quá khứ chưa ngủ yên, ngày mai liệu sẽ đến?”.",
+        isHot: true,
+        views: 980000
+      },
+      {
+        id: 3,
+        title: "Mưa Đỏ",
+        originalTitle: "Gisaengchung / Parasite",
+        genres: ["Tâm lý", "Chiến Tranh", "Tôi yêu Việt Nam"],
+        rating: 8.5,
+        year: 2019,
+        duration: "132 phút",
+        poster: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1ViFpD1bPjn82zUElEtNnIR4HvNq9tuZdQg_N7jUrow&s=10",
+        backdrop: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT1ViFpD1bPjn82zUElEtNnIR4HvNq9tuZdQg_N7jUrow&s=10",
+        description: "Những anh hùng",
+        isHot: false,
+        views: 750000
+      },
+      {
+        
+    id: 4,
+    title: "Naruto",
+    originalTitle: "Naruto kun",
+    genres: ["Hoạt hình"],
+    rating: 8.9,
+    year: 2016,
+    duration: "106 phút",
+    poster: "https://i.ebayimg.com/images/g/Or8AAOSwEDBdtMUc/s-l1200.jpg",
+    backdrop: "https://i.ebayimg.com/images/g/Or8AAOSwEDBdtMUc/s-l1200.jpg",
+    description: "Naruto là một loạt phim hoạt hình...",
+    videoUrl: "videos/naruto.mp4", // <-- Lưu đường dẫn video ở đây dưới dạng chuỗi text
+    isHot: true,
+    views: 110000
+}
+        
+      ,
+      {
+        id: 5,
+        title: "Spirited Away (Vùng Đất Linh Hồn)",
+        originalTitle: "Sen to Chihiro no Kamikakushi",
+        genres: ["Hoạt hình", "Phiêu lưu", "Gia đình"],
+        rating: 8.6,
+        year: 2001,
+        duration: "125 phút",
+        poster: "https://thumb.wikimedia.org/wikipedia/vi/thumb/3/30/Spirited_Away_poster.JPG/250px-Spirited_Away_poster.JPG?utm_source=vi.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        backdrop: "https://thumb.wikimedia.org/wikipedia/vi/thumb/3/30/Spirited_Away_poster.JPG/250px-Spirited_Away_poster.JPG?utm_source=vi.wikipedia.org&utm_campaign=parser&utm_content=thumbnail",
+        description: "Cô bé Chihiro 10 tuổi vô tình lạc vào thế giới phép thuật kỳ bí do các vị thần cai quản. Cô phải dũng cảm làm việc tại nhà tắm công cộng để cứu cha mẹ bị biến thành heo.",
+        isHot: false,
+        views: 890000
+      },
+      {
+        id: 6,
+        title: "The Dark Knight",
+        originalTitle: "Kỵ Sĩ Bóng Đêm",
+        genres: ["Hành động", "Kinh dị", "Tâm lý"],
+        rating: 9.0,
+        year: 2008,
+        duration: "152 phút",
+        poster: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_FMjpg_UX1000_.jpg",
+        backdrop: "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_FMjpg_UX1000_.jpg",
+        description: "Batman phải đối mặt với mối đe dọa lớn nhất đối với thành phố Gotham: Joker - tên tội phạm tâm thần khét tiếng muốn đẩy Gotham vào hỗn loạn và hỗn chiến thử thách bản lĩnh Người Dơi.",
+        isHot: true,
+        views: 1400000
+      },
+      {
+        id: 7,
+        title: "Cổ Trang: Thái Cổ Thần Vương",
+        originalTitle: "Ancient God Sovereign",
+        genres: ["Cổ trang", "Hành động", "Phiêu lưu"],
+        rating: 8.1,
+        year: 2022,
+        duration: "45 tập",
+        poster: "https://www.iq.com/wiki/_next/image?url=https%3A%2F%2Fm.iqiyipic.com%2Fimage%2F20200907%2Fff%2Fa6%2Fa_100422136_m_600_en_440_608.webp&w=3840&q=75",
+        backdrop: "https://www.iq.com/wiki/_next/image?url=https%3A%2F%2Fm.iqiyipic.com%2Fimage%2F20200907%2Fff%2Fa6%2Fa_100422136_m_600_en_440_608.webp&w=3840&q=75",
+        description: "Tần Tấn gia tộc ở Cửu Thiên Đại Lục sinh ra thiên tài Tần Hỏi Thiên, vượt qua nghịch cảnh lập nên huyền thoại luyện thể thần thông chống lại ma tộc.",
+        isHot: false,
+        views: 520000
+      },
+      {
+        id: 8,
+        title: "Chuyện Tình Rung Cảm",
+        originalTitle: "Make Me Tingle - Romance",
+        genres: ["Tình cảm", "Lãng mạn", "Hài hước"],
+        rating: 7.8,
+        year: 2023,
+        duration: "115 phút",
+        poster: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=600&auto=format&fit=crop",
+        backdrop: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?q=80&w=1200&auto=format&fit=crop",
+        description: "Mối tình công sở ngọt ngào nhưng lãng mạn giữa nữ quản lý kỷ luật và chàng nhiếp ảnh gia tự do đầy ngẫu hứng.",
+        isHot: false,
+        views: 430000
+      }
+    ];
+
+    /* ==========================================================================
+       2. APP STATE MANAGEMENT
+       ========================================================================== */
+    let selectedGenres = new Set();
+    let searchQuery = "";
+    let sortBy = "default";
+    let debounceTimer = null;
+
+    // DOM Elements
+    const movieGrid = document.getElementById("movieGrid");
+    const genreCheckboxContainer = document.getElementById("genreCheckboxContainer");
+    const searchInput = document.getElementById("searchInput");
+    const searchInputMobile = document.getElementById("searchInputMobile");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const sortBySelect = document.getElementById("sortBySelect");
+    const movieCountBadge = document.getElementById("movieCountBadge");
+    const filterStatusText = document.getElementById("filterStatusText");
+    const noResultsState = document.getElementById("noResultsState");
+    const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+    const clearAllFiltersBtn = document.getElementById("clearAllFiltersBtn");
+    const themeToggleBtn = document.getElementById("themeToggleBtn");
+
+    // Modal DOM Elements
+    const movieModal = document.getElementById("movieModal");
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalOriginalTitle = document.getElementById("modalOriginalTitle");
+    const modalRating = document.getElementById("modalRating");
+    const modalYear = document.getElementById("modalYear");
+    const modalDuration = document.getElementById("modalDuration");
+    const modalDescription = document.getElementById("modalDescription");
+    const modalPoster = document.getElementById("modalPoster");
+    const modalBackdropImg = document.getElementById("modalBackdropImg");
+    const modalGenres = document.getElementById("modalGenres");
+    const modalRelatedGrid = document.getElementById("modalRelatedGrid");
+
+    /* ==========================================================================
+       3. INITIALIZATION & SETUP
+       ========================================================================== */
+    window.addEventListener("DOMContentLoaded", () => {
+      initTheme();
+      renderGenresCheckboxes();
+      renderMovies();
+      renderHeroBanner(moviesData[0]);
+      renderTopTrending();
+      setupEventListeners();
+    });
+
+    /* Dark/Light Mode with localStorage (Bài 3) */
+    function initTheme() {
+      const savedTheme = localStorage.getItem("cinema_theme");
+      if (savedTheme === "light") {
+        document.body.classList.remove("dark");
+      } else {
+        document.body.classList.add("dark");
+      }
+    }
+
+    function toggleTheme() {
+      if (document.body.classList.contains("dark")) {
+        document.body.classList.remove("dark");
+        localStorage.setItem("cinema_theme", "light");
+      } else {
+        document.body.classList.add("dark");
+        localStorage.setItem("cinema_theme", "dark");
+      }
+    }
+
+    /* Extract unique genres and build dynamic Checkboxes (Bài 2) */
+    function renderGenresCheckboxes() {
+      const allGenres = [...new Set(moviesData.flatMap(movie => movie.genres))].sort();
+      
+      genreCheckboxContainer.innerHTML = allGenres.map((genre, idx) => `
+        <div class="flex items-center">
+          <input 
+            type="checkbox" 
+            id="genre-${idx}" 
+            value="${genre}" 
+            class="custom-checkbox hidden"
+          >
+          <label 
+            for="genre-${idx}" 
+            class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 text-xs font-semibold text-gray-700 dark:text-gray-300 cursor-pointer hover:bg-gray-100 dark:hover:bg-slate-800 transition-all select-none"
+          >
+            <span>${genre}</span>
+            <i class="fa-solid fa-check text-[10px] opacity-0 transition-opacity"></i>
+          </label>
+        </div>
+      `).join('');
+
+      // Attach checkbox listeners
+      genreCheckboxContainer.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            selectedGenres.add(e.target.value);
+          } else {
+            selectedGenres.delete(e.target.value);
+          }
+          renderMovies();
+        });
+      });
+    }
+
+    /* ==========================================================================
+       4. FILTERING & SEARCH LOGIC (Bài 2: Debounce + Multicriteria)
+       ========================================================================== */
+    function getFilteredMovies() {
+      return moviesData.filter(movie => {
+        // Match Search Query (case insensitive)
+        const matchSearch = movie.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                            movie.originalTitle.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            movie.genres.some(g => g.toLowerCase().includes(searchQuery.toLowerCase()));
+
+        // Match Genre Checkboxes (Movie must have ALL selected genres or AT LEAST ONE based on requirement)
+        const matchGenres = selectedGenres.size === 0 || 
+                            Array.from(selectedGenres).some(selectedG => movie.genres.includes(selectedG));
+
+        return matchSearch && matchGenres;
+      }).sort((a, b) => {
+        if (sortBy === "rating-desc") return b.rating - a.rating;
+        if (sortBy === "year-desc") return b.year - a.year;
+        if (sortBy === "title-asc") return a.title.localeCompare(b.title);
+        return 0; // default
+      });
+    }
+
+    /* Debounce Utility function (Bài 2) */
+    function debounce(func, delay = 350) {
+      return function(...args) {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+
+    function handleSearchInput(e) {
+      searchQuery = e.target.value.trim();
+      if (searchQuery.length > 0) {
+        clearSearchBtn.classList.remove("hidden");
+      } else {
+        clearSearchBtn.classList.add("hidden");
+      }
+      renderMovies();
+    }
+
+    /* ==========================================================================
+       5. RENDER FUNCTIONS
+       ========================================================================== */
+    function renderMovies() {
+      const filtered = getFilteredMovies();
+      
+      // Update badge status
+      movieCountBadge.textContent = `${filtered.length} / ${moviesData.length} Phim`;
+      
+      if (selectedGenres.size > 0 || searchQuery !== "") {
+        filterStatusText.textContent = `Đang lọc: ${selectedGenres.size} thể loại | Từ khóa: "${searchQuery}"`;
+      } else {
+        filterStatusText.textContent = `Đang hiển thị tất cả các phim VIP`;
+      }
+
+      if (filtered.length === 0) {
+        movieGrid.innerHTML = "";
+        noResultsState.classList.remove("hidden");
+        noResultsState.classList.add("flex");
+        return;
+      } else {
+        noResultsState.classList.add("hidden");
+        noResultsState.classList.remove("flex");
+      }
+
+      // Render movie cards (Bài 1 Grid + VIP Animation)
+      movieGrid.innerHTML = filtered.map(movie => `
+        <div 
+          onclick="openMovieModal(${movie.id})" 
+          class="movie-card group cursor-pointer relative rounded-2xl overflow-hidden glass-panel border border-gray-200 dark:border-white/10 bg-slate-900/40 flex flex-col"
+        >
+          <!-- KHUNG ẢNH PHIM: src="${movie.poster}" chính là đường dẫn áp phích -->
+          <div class="relative aspect-[2/3] w-full overflow-hidden bg-slate-950">
+            <img 
+              src="${movie.poster}" 
+              alt="${movie.title}" 
+              class="poster-img w-full h-full object-cover"
+              loading="lazy"
+              onerror="this.src='https://placehold.co/400x600/1e293b/ffffff?text=Poster+Unavailable'"
+            >
+            
+            <!-- Glowing Neon Badges -->
+            <div class="absolute top-2 left-2 flex flex-col gap-1 z-10">
+              ${movie.isHot ? '<span class="badge-gradient-hot text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-md">HOT</span>' : ''}
+              <span class="badge-gradient-hd text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md">HD</span>
+            </div>
+
+            <div class="absolute top-2 right-2 z-10">
+              <span class="bg-black/70 backdrop-blur-md text-amber-400 font-bold text-[11px] px-2 py-0.5 rounded-lg border border-white/10 flex items-center gap-1">
+                <i class="fa-solid fa-star text-[10px]"></i> ${movie.rating}
+              </span>
+            </div>
+
+            <!-- Hover Play Button Overlay -->
+            <div class="poster-overlay absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 transition-opacity duration-300 flex items-center justify-center">
+              <div class="w-12 h-12 rounded-full badge-gradient-hot flex items-center justify-center text-white text-lg shadow-xl shadow-brand-red/50 transform scale-75 group-hover:scale-100 transition-transform">
+                <i class="fa-solid fa-play ml-0.5"></i>
+              </div>
+            </div>
+          </div>
+
+          <!-- Content Info -->
+          <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
+            <div>
+              <h3 class="font-bold text-sm text-gray-900 dark:text-white line-clamp-1 group-hover:text-brand-red transition-colors">${movie.title}</h3>
+              <p class="text-[11px] text-gray-400 line-clamp-1 mt-0.5">${movie.genres.join(" • ")}</p>
+            </div>
+
+            <div class="flex items-center justify-between text-[10px] text-gray-400 pt-2 border-t border-gray-200 dark:border-white/5">
+              <span>${movie.year}</span>
+              <span class="text-brand-cyan">${movie.duration}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* Render Top Trending (Motchill Sidebar Vibe) */
+    function renderTopTrending() {
+      const topList = [...moviesData].sort((a, b) => b.views - a.views).slice(0, 4);
+      const topTrendingContainer = document.getElementById("topTrendingList");
+
+      topTrendingContainer.innerHTML = topList.map((movie, index) => `
+        <div onclick="openMovieModal(${movie.id})" class="flex items-center gap-3 p-2.5 rounded-2xl hover:bg-white/10 cursor-pointer transition-all border border-transparent hover:border-white/10">
+          <span class="w-7 h-7 rounded-xl font-extrabold text-sm flex items-center justify-center ${index === 0 ? 'bg-amber-400 text-black shadow-lg shadow-amber-400/30' : index === 1 ? 'bg-slate-300 text-black' : 'bg-amber-700/50 text-white'}">${index + 1}</span>
+          <img src="${movie.poster}" class="w-12 h-16 object-cover rounded-xl shadow" alt="${movie.title}">
+          <div class="flex-1 min-w-0">
+            <h4 class="text-xs font-bold truncate text-gray-900 dark:text-white">${movie.title}</h4>
+            <p class="text-[10px] text-gray-400 truncate">${movie.genres.join(", ")}</p>
+            <div class="flex items-center gap-2 mt-1 text-[10px] text-amber-400">
+              <span>⭐ ${movie.rating}</span>
+              <span class="text-gray-500">|</span>
+              <span class="text-gray-400"><i class="fa-solid fa-eye text-[9px]"></i> ${(movie.views / 1000).toFixed(0)}k</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderHeroBanner(movie) {
+      document.getElementById("heroTitle").textContent = movie.title;
+      document.getElementById("heroDesc").textContent = movie.description;
+      document.getElementById("heroRating").textContent = movie.rating;
+      document.getElementById("heroYear").textContent = movie.year;
+      document.getElementById("heroPoster").src = movie.poster;
+      document.getElementById("heroBackdrop").src = movie.backdrop;
+      
+      document.getElementById("heroPlayBtn").onclick = () => openMovieModal(movie.id);
+    }
+
+    /* ==========================================================================
+       6. MODAL & RELATED MOVIES (Bài 3)
+       ========================================================================== */
+    function openMovieModal(movieId) {
+      const movie = moviesData.find(m => m.id === movieId);
+      if (!movie) return;
+
+      modalTitle.textContent = movie.title;
+      modalOriginalTitle.textContent = movie.originalTitle;
+      modalRating.textContent = `${movie.rating}/10`;
+      modalYear.textContent = movie.year;
+      modalDuration.textContent = movie.duration;
+      modalDescription.textContent = movie.description;
+      modalPoster.src = movie.poster;
+      modalBackdropImg.src = movie.backdrop;
+
+      // Genre Badges
+      modalGenres.innerHTML = movie.genres.map(g => 
+        `<span class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-brand-purple/20 text-brand-purple border border-brand-purple/30">${g}</span>`
+      ).join('');
+
+      // Related Movies (Bài 3: Phim cùng thể loại)
+      const related = moviesData.filter(m => m.id !== movie.id && m.genres.some(g => movie.genres.includes(g))).slice(0, 4);
+      modalRelatedGrid.innerHTML = related.map(rel => `
+        <div onclick="openMovieModal(${rel.id})" class="cursor-pointer group relative rounded-xl overflow-hidden bg-slate-800 border border-white/10 hover:border-brand-red transition-all">
+          <img src="${rel.poster}" class="w-full h-28 object-cover group-hover:scale-105 transition-transform">
+          <div class="p-2 bg-slate-900/90">
+            <h5 class="text-[11px] font-bold truncate text-white">${rel.title}</h5>
+            <span class="text-[9px] text-amber-400">⭐ ${rel.rating}</span>
+          </div>
+        </div>
+      `).join('');
+
+      movieModal.classList.remove("hidden");
+      document.body.style.overflow = "hidden"; // Prevent background scroll
+    }
+
+    function closeModal() {
+      movieModal.classList.add("hidden");
+      document.body.style.overflow = "auto";
+    }
+
+    /* ==========================================================================
+       7. EVENT LISTENERS
+       ========================================================================== */
+    function setupEventListeners() {
+      // Search Input with Debounce (Bài 2)
+      const debouncedSearch = debounce(handleSearchInput, 300);
+      searchInput.addEventListener("input", debouncedSearch);
+      searchInputMobile.addEventListener("input", debouncedSearch);
+
+      clearSearchBtn.addEventListener("click", () => {
+        searchInput.value = "";
+        searchQuery = "";
+        clearSearchBtn.classList.add("hidden");
+        renderMovies();
+      });
+
+      // Sort Change
+      sortBySelect.addEventListener("change", (e) => {
+        sortBy = e.target.value;
+        renderMovies();
+      });
+
+      // Reset Filters Button
+      resetFiltersBtn.addEventListener("click", resetAllFilters);
+      clearAllFiltersBtn.addEventListener("click", resetAllFilters);
+
+      // Theme Toggle
+      themeToggleBtn.addEventListener("click", toggleTheme);
+
+      // Modal Actions
+      closeModalBtn.addEventListener("click", closeModal);
+      modalBackdrop.addEventListener("click", closeModal);
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && !movieModal.classList.contains("hidden")) {
+          closeModal();
+        }
+      });
+    }
+
+    function resetAllFilters() {
+      selectedGenres.clear();
+      searchQuery = "";
+      sortBy = "default";
+      searchInput.value = "";
+      searchInputMobile.value = "";
+      sortBySelect.value = "default";
+      clearSearchBtn.classList.add("hidden");
+
+      // Uncheck all genre checkboxes
+      document.querySelectorAll('#genreCheckboxContainer input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+      });
+
+      renderMovies();
+    }
+  </script>
+</body>
+</html>
